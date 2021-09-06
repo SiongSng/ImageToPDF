@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_unnecessary_containers, unnecessary_null_comparison, avoid_function_literals_in_foreach_calls, sized_box_for_whitespace, non_constant_identifier_names
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_unnecessary_containers, unnecessary_null_comparison, avoid_function_literals_in_foreach_calls, sized_box_for_whitespace, non_constant_identifier_names, dead_code
 
 import 'package:file_selector_platform_interface/file_selector_platform_interface.dart';
 import 'package:flutter/cupertino.dart';
@@ -145,121 +145,106 @@ class _MyHomePageState extends State<MyHomePage> {
                     bool onHover = false;
                     XFile file = files[index];
                     Size size = MediaQuery.of(context).size;
-                    return GridTile(
-                      child: InkWell(
+
+                    return Card(
+                        child: InkWell(
+                      onHover: (value) {
+                        if (value) {
+                          setGridState(() {
+                            onHover = true;
+                          });
+                        } else {
+                          setGridState(() {
+                            onHover = false;
+                          });
+                        }
+                      },
+                      onTap: () {
+                        showCupertinoDialog(
+                            barrierDismissible: true,
+                            context: context,
+                            builder: (context) => AlertDialog(
+                                  title: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        "圖片預覽",
+                                      ),
+                                      Flexible(
+                                        child: Align(
+                                          alignment: Alignment.topRight,
+                                          child: IconButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            icon: Icon(Icons.close),
+                                            tooltip: "關閉",
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      FutureBuilder(
+                                          future: file.readAsBytes(),
+                                          builder: (context,
+                                              AsyncSnapshot imageSnapshot) {
+                                            if (imageSnapshot.hasData) {
+                                              return Image.memory(
+                                                imageSnapshot.data,
+                                                width: size.width / 2,
+                                                height: size.height / 2,
+                                              );
+                                            } else {
+                                              return CircularProgressIndicator();
+                                            }
+                                          }),
+                                      Text(file.name),
+                                    ],
+                                  ),
+                                ));
+                      },
+                      child: GridTile(
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            SizedBox(
-                              height: 12,
-                            ),
                             FutureBuilder(
                                 future: file.readAsBytes(),
                                 builder:
                                     (context, AsyncSnapshot imageSnapshot) {
                                   if (imageSnapshot.hasData) {
-                                    return Stack(
-                                      children: [
-                                        Image.memory(
-                                          imageSnapshot.data,
-                                          width: size.width / 5,
-                                          height: size.height / 5,
-                                          fit: BoxFit.contain,
-                                        ),
-                                        StatefulBuilder(
-                                            builder: (context, setGridState_) {
-                                          setGridState = setGridState_;
-                                          if (onHover) {
-                                            return Positioned(
-                                              child: IconButton(
-                                                onPressed: () {
-                                                  files.removeAt(index);
-                                                  setState(() {});
-                                                },
-                                                icon: Icon(Icons.delete),
-                                                iconSize: 25,
-                                                tooltip: "移除",
-                                              ),
-                                              top: 5,
-                                              right: 10,
-                                              // bottom: 10,
-                                            );
-                                          } else {
-                                            return Container();
-                                          }
-                                        })
-                                      ],
+                                    return Expanded(
+                                      child: Image.memory(
+                                        imageSnapshot.data,
+                                        fit: BoxFit.contain,
+                                      ),
                                     );
                                   } else {
                                     return CircularProgressIndicator();
                                   }
                                 }),
-                            SizedBox(
-                              height: 12,
-                            ),
                             Text(file.name),
+                            StatefulBuilder(builder: (context, setGridState_) {
+                              setGridState = setGridState_;
+                              if (onHover) {
+                                return IconButton(
+                                  onPressed: () {
+                                    files.removeAt(index);
+                                    setState(() {});
+                                  },
+                                  icon: Icon(Icons.delete),
+                                  iconSize: 25,
+                                  tooltip: "移除",
+                                );
+                              } else {
+                                return Container();
+                              }
+                            })
                           ],
                         ),
-                        onHover: (value) {
-                          if (value) {
-                            setGridState(() {
-                              onHover = true;
-                            });
-                          } else {
-                            setGridState(() {
-                              onHover = false;
-                            });
-                          }
-                        },
-                        onTap: () {
-                          showCupertinoDialog(
-                              barrierDismissible: true,
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                    title: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          "圖片預覽",
-                                        ),
-                                        Flexible(
-                                          child: Align(
-                                            alignment: Alignment.topRight,
-                                            child: IconButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              icon: Icon(Icons.close),
-                                              tooltip: "關閉",
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        FutureBuilder(
-                                            future: file.readAsBytes(),
-                                            builder: (context,
-                                                AsyncSnapshot imageSnapshot) {
-                                              if (imageSnapshot.hasData) {
-                                                return Image.memory(
-                                                  imageSnapshot.data,
-                                                  width: size.width / 2,
-                                                  height: size.height / 2,
-                                                );
-                                              } else {
-                                                return CircularProgressIndicator();
-                                              }
-                                            }),
-                                        Text(file.name),
-                                      ],
-                                    ),
-                                  ));
-                        },
                       ),
-                    );
+                    ));
                   }),
             ),
           ],
