@@ -19,3 +19,4 @@ jobs:
     - uses: erickzanardo/flutter-gh-pages@v3
       with:
         webRenderer: html
+        customArgs: --base-href /ImageToPDF/
