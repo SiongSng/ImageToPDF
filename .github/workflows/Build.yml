@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches:
+    - main
+    
+  workflow_dispatch:
+
+jobs:
+  Web:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: subosito/flutter-action@v1
+      with:
+       channel: 'dev'
+    - run: flutter pub get
+    - run: flutter build web --web-renderer html --release
+    - run: rm -rf ${{ github.workspace }}/docs*
+    - run: cp -r ${{ github.workspace }}/build/web ${{ github.workspace }}/docs
+
+    - name: "Update File"
+      run: |
+        git config --global user.email "rrt467778@gmail.com.com"
+        git config --global user.name "SiongSng's Bot"
+        git add ${{ github.workspace }}/docs
+        git commit -m "Update Website"
+        git push origin HEAD:${{ github.ref }}
+      shell: pwsh
