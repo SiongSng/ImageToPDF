@@ -12,9 +12,4 @@ pubspec.lock
 doc/api/
 
 # Avoid committing generated Javascript files:
-*.dart.js
 *.info.json      # Produced by the --dump-info flag.
-                 # project includes source files written in JavaScript.
-*.js_
-*.js.deps
-*.js.map
