@@ -16,15 +16,6 @@ jobs:
       with:
        channel: 'dev'
     - run: flutter pub get
-    - run: flutter build web --web-renderer html --release
-    - run: rm -rf ${{ github.workspace }}/docs*
-    - run: cp -r ${{ github.workspace }}/build/web ${{ github.workspace }}/docs
-
-    - name: "Update File"
-      run: |
-        git config --global user.email "rrt467778@gmail.com.com"
-        git config --global user.name "SiongSng's Bot"
-        git add ${{ github.workspace }}/docs
-        git commit -m "Update Website"
-        git push origin HEAD:${{ github.ref }}
-      shell: pwsh
+    - uses: erickzanardo/flutter-gh-pages@v3
+      with:
+        webRenderer: html
