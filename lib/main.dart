@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:imagetopdf/platform_service.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,15 +39,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<bool> ImageToPDF() async {
     final pdf = pw.Document();
 
-    await Future.delayed(Duration(seconds: 1));
-
-    await Future.forEach(files, (XFile file) async {});
+    await Future.delayed(Duration(milliseconds: 200));
 
     for (XFile file in files) {
       final image = pw.MemoryImage(
         await file.readAsBytes(),
       );
-
       pdf.addPage(pw.Page(
           pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
@@ -54,12 +52,11 @@ class _MyHomePageState extends State<MyHomePage> {
               child: pw.Image(image),
             );
           }));
+      await Future.delayed(Duration(milliseconds: 500));
     }
 
-    XFile pdfFile =
-        XFile.fromData(await pdf.save(), name: 'ImagePDF.pdf', mimeType: 'pdf');
-    pdfFile.saveTo("");
-    return true;
+    return await Printing.sharePdf(
+        bytes: await pdf.save(), filename: 'ImagePDF.pdf');
   }
 
   List<XFile> files = [];
@@ -153,105 +150,96 @@ class _MyHomePageState extends State<MyHomePage> {
                     XFile file = files[index];
                     Size size = MediaQuery.of(context).size;
 
-                    return Card(
-                        child: InkWell(
-                      onHover: (value) {
-                        if (value) {
-                          setGridState(() {
-                            onHover = true;
-                          });
-                        } else {
-                          setGridState(() {
-                            onHover = false;
-                          });
-                        }
-                      },
-                      onTap: () {
-                        showCupertinoDialog(
-                            barrierDismissible: true,
-                            context: context,
-                            builder: (context) => AlertDialog(
-                                  title: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "圖片預覽",
-                                      ),
-                                      Flexible(
-                                        child: Align(
-                                          alignment: Alignment.topRight,
-                                          child: IconButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            icon: Icon(Icons.close),
-                                            tooltip: "關閉",
+                    return FutureBuilder(
+                        future: file.readAsBytes(),
+                        builder: (context, AsyncSnapshot imageSnapshot) {
+                          if (imageSnapshot.hasData) {
+                            return Card(
+                                child: InkWell(
+                              onHover: (value) {
+                                if (value) {
+                                  setGridState(() {
+                                    onHover = true;
+                                  });
+                                } else {
+                                  setGridState(() {
+                                    onHover = false;
+                                  });
+                                }
+                              },
+                              onTap: () {
+                                showCupertinoDialog(
+                                    barrierDismissible: true,
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                          title: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                "圖片預覽",
+                                              ),
+                                              Flexible(
+                                                child: Align(
+                                                  alignment: Alignment.topRight,
+                                                  child: IconButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    icon: Icon(Icons.close),
+                                                    tooltip: "關閉",
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      FutureBuilder(
-                                          future: file.readAsBytes(),
-                                          builder: (context,
-                                              AsyncSnapshot imageSnapshot) {
-                                            if (imageSnapshot.hasData) {
-                                              return Image.memory(
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Expanded(
+                                                  child: Image.memory(
                                                 imageSnapshot.data,
-                                                width: size.width / 2,
-                                                height: size.height / 2,
-                                              );
-                                            } else {
-                                              return CircularProgressIndicator();
-                                            }
-                                          }),
-                                      Text(file.name),
-                                    ],
-                                  ),
-                                ));
-                      },
-                      child: GridTile(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FutureBuilder(
-                                future: file.readAsBytes(),
-                                builder:
-                                    (context, AsyncSnapshot imageSnapshot) {
-                                  if (imageSnapshot.hasData) {
-                                    return Expanded(
+                                                fit: BoxFit.contain,
+                                              )),
+                                              Text(file.name),
+                                            ],
+                                          ),
+                                        ));
+                              },
+                              child: GridTile(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Expanded(
                                       child: Image.memory(
                                         imageSnapshot.data,
                                         fit: BoxFit.contain,
                                       ),
-                                    );
-                                  } else {
-                                    return CircularProgressIndicator();
-                                  }
-                                }),
-                            StatefulBuilder(builder: (context, setGridState_) {
-                              setGridState = setGridState_;
-                              if (onHover) {
-                                return IconButton(
-                                  onPressed: () {
-                                    files.removeAt(index);
-                                    setState(() {});
-                                  },
-                                  icon: Icon(Icons.delete),
-                                  iconSize: 25,
-                                  tooltip: "移除",
-                                );
-                              } else {
-                                return Container();
-                              }
-                            })
-                          ],
-                        ),
-                      ),
-                    ));
+                                    ),
+                                    StatefulBuilder(
+                                        builder: (context, setGridState_) {
+                                      setGridState = setGridState_;
+                                      if (onHover) {
+                                        return IconButton(
+                                          onPressed: () {
+                                            files.removeAt(index);
+                                            setState(() {});
+                                          },
+                                          icon: Icon(Icons.delete),
+                                          iconSize: 25,
+                                          tooltip: "移除",
+                                        );
+                                      } else {
+                                        return Container();
+                                      }
+                                    })
+                                  ],
+                                ),
+                              ),
+                            ));
+                          } else {
+                            return CircularProgressIndicator();
+                          }
+                        });
                   }),
             ),
           ],
