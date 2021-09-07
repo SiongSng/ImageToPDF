@@ -4,6 +4,7 @@ import 'package:file_selector_platform_interface/file_selector_platform_interfac
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:imagetopdf/platform_service.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -73,72 +74,78 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-                onPressed: () async {
-                  if (files.isEmpty) {
-                    showCupertinoDialog(
-                        barrierDismissible: true,
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                              title: Text("您尚未新增圖片檔，因此無法轉換"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: Text("確定"),
-                                )
-                              ]);
-                        });
-                  } else {
-                    showCupertinoDialog(
-                        context: context,
-                        builder: (context) {
-                          return FutureBuilder(
-                              future: ImageToPDF(),
-                              builder: (context, AsyncSnapshot snapshot) {
-                                if (snapshot.hasData) {
-                                  return AlertDialog(
-                                      title: Text("轉檔完成"),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text("確定"),
-                                        )
-                                      ]);
-                                } else {
-                                  return AlertDialog(
-                                    title: Text("轉檔中，請稍後..."),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SizedBox(
-                                          height: 10,
-                                        ),
-                                        CircularProgressIndicator(),
-                                        SizedBox(
-                                          height: 10,
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                              });
-                        });
-                  }
-                },
-                child: Text(
-                  "轉檔為PDF",
-                  style: TextStyle(fontSize: 35),
-                )),
+              onPressed: () async {
+                if (files.isEmpty) {
+                  showCupertinoDialog(
+                      barrierDismissible: true,
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                            title: Text("您尚未新增圖片檔，因此無法轉換"),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text("確定"),
+                              )
+                            ]);
+                      });
+                } else {
+                  showCupertinoDialog(
+                      context: context,
+                      builder: (context) {
+                        return FutureBuilder(
+                            future: ImageToPDF(),
+                            builder: (context, AsyncSnapshot snapshot) {
+                              if (snapshot.hasData) {
+                                return AlertDialog(
+                                    title: Text("轉檔完成"),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text("確定"),
+                                      )
+                                    ]);
+                              } else {
+                                return AlertDialog(
+                                  title: Text("轉檔中，請稍後..."),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      CircularProgressIndicator(),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            });
+                      });
+                }
+              },
+              child: Text(
+                "轉檔為PDF",
+                style: TextStyle(fontSize: 35),
+              ),
+            ),
+            SizedBox(height: 10),
             Container(
               height: MediaQuery.of(context).size.height / 1.3,
               child: GridView.builder(
                   controller: ScrollController(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      childAspectRatio: 1.35, crossAxisCount: 5),
+                      childAspectRatio: 0.9,
+                      crossAxisCount:
+                          PlatformService.isIOS() || PlatformService.isAndroid()
+                              ? 3
+                              : 6),
                   itemCount: files.length,
                   itemBuilder: (context, index) {
                     late var setGridState;
@@ -208,6 +215,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                       child: GridTile(
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             FutureBuilder(
                                 future: file.readAsBytes(),
@@ -224,7 +232,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                     return CircularProgressIndicator();
                                   }
                                 }),
-                            Text(file.name),
                             StatefulBuilder(builder: (context, setGridState_) {
                               setGridState = setGridState_;
                               if (onHover) {
